@@ -53,16 +53,15 @@ hh.getjobs <- function(query, paid = FALSE)
     
   }
   
-  names <- c("query", "URL", "id", "Name", "City", 
-             "Published", "Company", "Responsibility", "Requirement")
+  names <- c("query", "URL", "id", "name", "city", 
+             "published", "company", "responsibility", "requirement")
   colnames(df) <- names
   
   return(df)
 }
 
-
 ####################
-## create function get more data use url vacancy
+## create function get more data use url vacancy: salary and experiens
 ####################
 
 hh.getSalaryExp <- function(df)
@@ -124,7 +123,118 @@ hh.getskills <- function(allurls)
   return(analyst.skills)
 }
 
+##############################
+## function create usd,Eur and other
+##############################
 
+quotations.update <- function(currencies)
+{
+  # Parses the most up-to-date qutations data provided by the Central Bank of Russia
+  # and returns a table with currency rate against RUR
+  
+  doc <- XML::xmlParse("http://www.cbr.ru/scripts/XML_daily.asp")
+  
+  quotationsdf <- XML::xmlToDataFrame(doc, stringsAsFactors = FALSE)
+  
+  quotationsdf <- select(quotationsdf, -Name) 
+  
+  quotationsdf$NumCode <- as.numeric(quotationsdf$NumCode)
+  quotationsdf$Nominal <- as.numeric(quotationsdf$Nominal)
+  quotationsdf$Value <- as.numeric(sub(",", ".", quotationsdf$Value))
+  
+  quotationsdf$Value <- quotationsdf$Value / quotationsdf$Nominal
+  quotationsdf <- quotationsdf %>% select(CharCode, Value)
+  
+  return(quotationsdf)
+  
+}
 
+##############################
+## function convert usd,eur to rur
+##############################
 
+convert.currency <- function(targetCurrency = "RUR", df, quotationsdf)
+{
+  cond <- (!is.na(df$currency) & df$currency == "BYR") 
+  df[cond, "currency"] <- "BYN"
+  
+  currencies <- unique(na.omit(df$currency[df$currency != targetCurrency]))
+  
+  if (!is.null(df$From))
+  {
+    for (currency in currencies)
+    {
+      condition <- (!is.na(df$From) & df$currency == currency)
+      
+      try(
+        df$From[condition] <- 
+          df$From[condition] * quotationsdf$Value[quotationsdf$CharCode == currency]
+      )
+    }
+  }
+  
+  if (!is.null(df$To))
+  {
+    for (currency in currencies)
+    {
+      condition <- !is.na(df$To) & df$currency == currency
+      
+      try(
+        df$To[condition] <- 
+          df$To[condition] * quotationsdf$Value[quotationsdf$CharCode == currency]
+      )
+    }
+  }
+  
+  return(df %>% select(-currency))
+}
 
+gross.to.net <- function(df, resident = TRUE)
+{
+  if (resident == TRUE)
+    coef <- 0.87
+  else
+    coef <- 0.7
+  
+  if (!is.null(df$gross))
+    
+  {
+    
+    if (!is.null(df$from)) 
+    {
+      index <- na.omit(as.numeric(rownames(df[!is.na(df$from) & df$gross == TRUE,])))
+      
+      df$from[index] <- df$from[index] * coef
+    }
+    
+    if (!is.null(df$to)) 
+    {
+      index <- na.omit(as.numeric(rownames(df[!is.na(df$to) & df$gross == TRUE,])))
+      
+      df$to[index] <- df$to[index] * coef
+    }
+    
+    df <- df %>% select(-gross)
+  }
+  
+  return(df)
+}
+
+##############################
+## function convert name in vacanstion to classification
+##############################
+
+get.positions <- function(df)
+{
+  df$lvl <- NA
+  
+  df[grep(pattern = "lead|senior|старший|ведущий|главный", 
+          x = df$name, ignore.case = TRUE), "lvl"] <- "senior"
+  
+  df[grep(pattern = "junior|младший|стажер|стажёр", 
+          x = df$name, ignore.case = TRUE), "lvl"] <- "junior"
+  
+  df[is.na(df$lvl), "lvl"] <- "middle"
+  
+  return(df)
+}
