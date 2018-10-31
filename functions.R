@@ -64,34 +64,64 @@ hh.getjobs <- function(query, paid = FALSE)
 ####################
 ## create function get more data use url vacancy
 ####################
-hh.getAddData <- function(df)
+
+hh.getSalaryExp <- function(df)
 {
   df$experience <- NA
   df$currency <- NA
   df$from <- NA
   df$to <- NA
   df$gross <- NA
-  df$key_skills <- NA
   
   for (myURL in df$URL) {
     try( 
       {
         data <- fromJSON(myURL)
         
-        df[df$URL == myURL, "experience"] <- data$experience$name
-        df[df$URL == myURL, "currency"] <- data$salary$currency
-        df[df$URL == myURL, "from"] <- data$salary$from
-        df[df$URL == myURL, "to"] <- data$salary$to
-        df[df$URL == myURL, "gross"] <- data$salary$gross
-        df[df$URL == myURL, "key_skills"] <- data$key_skills$name
+        df[df$URL == myURL, "experience"] <- ifelse(is.null(data$experience$name),NA,data$experience$name)
+        df[df$URL == myURL, "currency"] <- ifelse(is.null(data$salary$currency),NA,data$salary$currency) 
+        df[df$URL == myURL, "from"] <- ifelse(is.null(data$salary$from),NA,data$salary$from) 
+        df[df$URL == myURL, "to"] <- ifelse(is.null(data$salary$to),NA,data$salary$to) 
+        df[df$URL == myURL, "gross"] <- ifelse(is.null(data$salary$gross),NA,data$salary$gross) 
       }
     )
     
-    print(paste0("Filling in ", which(df$URL == myURL, arr.ind = TRUE), "from ", nrow(df)))
+    print(paste0("Filling in ", which(df$URL == myURL, arr.ind = TRUE), " from ", nrow(df)))
     
   }
   
   return(df)
+}
+
+####################
+## create function get more data use url vacancy and skils
+####################
+
+hh.getskills <- function(allurls)
+{
+  analyst.skills <- data.frame(
+    id = character(), # id 
+    skill = character() # 
+  )
+  
+  for (myURL in allurls) {
+    
+    data <- fromJSON(myURL)
+    
+    if (length(data$key_skills) > 0)
+      analyst.skills <- rbind(analyst.skills, cbind(data$id, data$key_skills))
+    
+    print(paste0("Filling in "
+                 , which(allurls == myURL, arr.ind = TRUE)
+                 , " out of "
+                 , length(allurls)))
+    
+  }
+  
+  names(analyst.skills) <- c("id", "skill")
+  analyst.skills$skill <- tolower(analyst.skills$skill)
+  
+  return(analyst.skills)
 }
 
 
