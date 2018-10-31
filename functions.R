@@ -160,28 +160,28 @@ convert.currency <- function(targetCurrency = "RUR", df, quotationsdf)
   
   currencies <- unique(na.omit(df$currency[df$currency != targetCurrency]))
   
-  if (!is.null(df$From))
+  if (!is.null(df$from))
   {
     for (currency in currencies)
     {
-      condition <- (!is.na(df$From) & df$currency == currency)
+      condition <- (!is.na(df$from) & df$currency == currency)
       
       try(
-        df$From[condition] <- 
-          df$From[condition] * quotationsdf$Value[quotationsdf$CharCode == currency]
+        df$from[condition] <- 
+          df$from[condition] * quotationsdf$Value[quotationsdf$CharCode == currency]
       )
     }
   }
   
-  if (!is.null(df$To))
+  if (!is.null(df$to))
   {
     for (currency in currencies)
     {
-      condition <- !is.na(df$To) & df$currency == currency
+      condition <- !is.na(df$to) & df$currency == currency
       
       try(
-        df$To[condition] <- 
-          df$To[condition] * quotationsdf$Value[quotationsdf$CharCode == currency]
+        df$to[condition] <- 
+          df$to[condition] * quotationsdf$Value[quotationsdf$CharCode == currency]
       )
     }
   }
@@ -237,4 +237,38 @@ get.positions <- function(df)
   df[is.na(df$lvl), "lvl"] <- "middle"
   
   return(df)
+}
+
+##############################
+## function use information about part salery to create all salary
+##############################
+
+select.paid <- function(df, suggest = TRUE)
+{
+  # Returns a data frame with average salaries between To and From
+  # optionally, can suggest To or From value in case only one is specified
+  
+  if (suggest == TRUE)
+  {
+    df <- df %>% filter(!is.na(from) | !is.na(to))
+    
+    magic.coefficient <- # shows the average difference between max and min salary 
+      
+      round(mean(df$to/df$from, na.rm = TRUE), 1)
+    
+    df[is.na(df$to),]$to <- df[is.na(df$to),]$from * magic.coefficient
+    df[is.na(df$from),]$from <- df[is.na(df$from),]$to / magic.coefficient
+    
+  }
+  
+  else
+  {
+    df <- na.omit(df)
+  }
+  
+  df$salary <- rowMeans(x = df %>% select(from, to))
+  
+  df$salary <- ceiling(df$salary / 10000) * 10000
+  
+  return(df %>% select(-from, -to))
 }
