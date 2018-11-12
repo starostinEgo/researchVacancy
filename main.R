@@ -8,6 +8,9 @@ library(plotly)
 setwd("C:\\Users\\EStarostin\\Desktop\\myWork/researchVacancy")
 source("functions.R")
 
+
+
+
 ################################
 ## step 1 get data from hh.ru
 ################################
@@ -116,3 +119,29 @@ dict <- read.csv(file = "competencies.csv", header = TRUE,
 # 4.2 match skills with dictionary
 
 all.skills <- categorize.skills(all.skills, dict)
+
+
+
+#################
+## Shiny 
+#####################
+library("shiny")
+runExample("01_hello")
+
+library(shiny)
+runApp("01_app.R")
+
+counties <- readRDS("census-app/data/counties.rds")
+head(counties)
+install.packages(c("maps", "mapproj"))
+install.packages("quantmod")
+
+library(maps)
+library(mapproj)
+library(quantmod)
+source("helpers.R")
+counties <- readRDS("data/counties.rds")
+percent_map(counties$white, "darkgreen", "% White")
+
+
+
