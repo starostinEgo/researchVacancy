@@ -127,7 +127,7 @@ hh.getskills <- function(allurls)
 ## function create usd,Eur and other
 ##############################
 
-quotations.update <- function(currencies)
+quotations.update <- function()
 {
   # Parses the most up-to-date qutations data provided by the Central Bank of Russia
   # and returns a table with currency rate against RUR
@@ -186,7 +186,7 @@ convert.currency <- function(targetCurrency = "RUR", df, quotationsdf)
     }
   }
   
-  return(df %>% select(-currency))
+  return(df%>% select(-currency))
 }
 
 gross.to.net <- function(df, resident = TRUE)
@@ -270,5 +270,37 @@ select.paid <- function(df, suggest = TRUE)
   
   df$salary <- ceiling(df$salary / 10000) * 10000
   
-  return(df %>% select(-from, -to))
+  return(df %>% select(-from, -to) %>% filter(salary <= 1000000))
+}
+
+
+################################
+## full description vacancy
+################################
+
+hh.get.full.description <- function(df)
+{
+  df$full.description <- NA
+  
+  for (myURL in df$URL) {
+    try(
+      {
+        data <- fromJSON(myURL)
+        
+        if (length(data$description) > 0)
+        {
+          df$full.description[which(df$URL == myURL, arr.ind = TRUE)] <- data$description
+        }
+        
+        print(paste0("Filling in "
+                     , which(df$URL == myURL, arr.ind = TRUE)
+                     , " out of "
+                     , length(df$URL)))
+      }
+    )
+  }
+  
+  df$full.description <- tolower(df$full.description)
+  
+  return(df)
 }
