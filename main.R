@@ -7,7 +7,7 @@ library(plotly)
 library(XML)
 library(htmlTable)
 
-setwd("C:\\Users\\EStarostin\\Desktop\\project\\research\\researchVacancy")
+setwd("C:\\Users\\EStarostin\\Desktop\\research\\researchVacancy")
 source("functions.R")
 
 
@@ -20,7 +20,7 @@ source("functions.R")
 ## функция идет на сайт hh и парсит данные по ключевым словам, что переданы в функции
 ## функция данные превращает в data.Frame
 
-jobdf <- hh.getjobs(query = c( "data+science"),
+jobdf <- hh.getjobs(query = c( "sales"),
                     ##"data+scientist"),
                     ##, "systems+analyst"
                     ##, "product+owner"), 
