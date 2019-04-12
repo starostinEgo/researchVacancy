@@ -3,6 +3,104 @@
 ################
 ## create function get data from hh
 ################
+hh.getresids <- function(query, paid = FALSE, area = 2)
+{
+  # Makes a call to hh API and gets the list of resume ids based on the given search queries
+  
+  for (q in query)
+  {
+    searchURL <- paste0("https://hh.ru/search/resume?text="
+                        , q
+                        , "&logic=normal&pos=position&exp_period=all_time&items_on_page=100&order_by=relevance&area="
+                        , area
+                        ,"&label=only_with_salary&clusters=true&relocation=living"
+                        ,"&page=")
+    allids <- NULL
+    for (pageNum in 0:30) {
+      try(
+        
+        {
+          #Вытащим id резюме 
+          hDoc <- read_html(paste0(searchURL, as.character(pageNum)))
+          
+          ids <- html_nodes(hDoc, css = 'a') %>% as.character() 
+          # Выделим все аттрибуты ссылок на странице
+          ids <- as.vector(ids) %>% `[`(str_detect(ids, fixed('/resume/'))) %>%
+            str_extract(pattern = '/resume/.{38}') %>% str_sub(str_count('/resume/') + 1)
+          ids <- ids[!str_detect(ids, "advanced")]
+          
+          print(paste0("Downloading page:", pageNum + 1, "; query = \"", q, "\""))
+          
+          allids <- append(allids, ids)
+        })
+    }
+  }
+  
+  return(allids)
+}
+
+hh.getresumes <- function(ids, name)
+{
+  
+  # ids <- head(ids, 10) # to speed up debugging
+  
+  df <- data.frame(
+    id = numeric() # id резюме
+    , Name = character() # название резюме
+    , City = character()
+    , Currency = character()
+    , Salary = numeric() # зарплата
+    , Published = character()
+    , Level = character()
+    , stringsAsFactors = FALSE
+  )
+  
+  for (id in ids)
+  {
+    try(
+      {
+        data <- read_html(paste0("https://spb.hh.ru/resume/", id))
+        
+        tmp <- str_split(
+          str_remove(pattern = "\u00A0",
+                     string = 
+                       html_text(
+                         html_node(x = data, xpath = '//*[@class="resume-block__salary"]')
+                       )), pattern = " "
+        )
+        
+        salary <- as.numeric(tmp[[1]][1])
+        
+        currency <- enc2utf8(tmp[[1]][2])
+        
+        city <- enc2utf8(html_text(
+          html_node(x = data, xpath = '//*[@itemprop="addressLocality"]')
+        ))
+        
+        title <- enc2utf8(html_text(
+          html_node(x = data, xpath = '//*[@class="resume-block__title-text "]')
+        ))
+        
+        
+        df <- rbind(df, data.frame(
+          id = id,
+          Name = title,
+          City = city,
+          Currency = currency,
+          Salary = salary,
+          Published = as.character(Sys.Date()),
+          Level = NA,
+          stringsAsFactors = FALSE))
+        
+        print("please just wait some more...")
+      }
+      
+    )
+    
+  }
+  
+  return(df)
+}
 
 hh.getjobs <- function(query, paid = FALSE)
 {
