@@ -20,8 +20,8 @@ source("functions.R")
 ## функция идет на сайт hh и парсит данные по ключевым словам, что переданы в функции
 ## функция данные превращает в data.Frame
 
-jobdf <- hh.getjobs(query = c("data+scientist"),
-                    ##),
+jobdf <- hh.getjobs(query = c( "sales"),
+                    ##"data+scientist"),
                     ##, "systems+analyst"
                     ##, "product+owner"), 
                     paid = FALSE)
@@ -71,14 +71,14 @@ jobs.paid$region <- ifelse(jobs.paid$city == "Москва" |
 
 
 ggplot(jobs.paid, aes(salary, fill = region, colour = region)) +
-           geom_density(alpha=.3) +
-           scale_fill_discrete(guide = guide_legend(reverse=FALSE)) +
-           scale_x_continuous(labels = function(x) format(x, scientific = FALSE), name = "Зарплата, руб.",
-                              breaks = round(seq(min(jobs.paid$salary), 
-                                                 max(jobs.paid$salary), by = 50000),1)) +
-           scale_y_continuous(name = "Плотность распределения") +
-           theme(axis.text.x = element_text(size=9), axis.title = element_text(size=10)) +
-            ggtitle("распределение заработной платы по городам")
+  geom_density(alpha=.3) +
+  scale_fill_discrete(guide = guide_legend(reverse=FALSE)) +
+  scale_x_continuous(labels = function(x) format(x, scientific = FALSE), name = "Зарплата, руб.",
+                     breaks = round(seq(min(jobs.paid$salary), 
+                                        max(jobs.paid$salary), by = 50000),1)) +
+  scale_y_continuous(name = "Плотность распределения") +
+  theme(axis.text.x = element_text(size=9), axis.title = element_text(size=10)) +
+  ggtitle("распределение заработной платы по городам")
 
 
 ## распределения заработной платы в зависимости от города и уровня
@@ -103,16 +103,16 @@ ggplot(jobs.paid %>% filter(region %in% c("Москва", "Санкт-Петер
 ## сравнения middle and senior только для Москвы
 
 ggplot(jobs.paid %>% filter(region == "Москва"), aes(salary, fill = lvl, color = lvl)) +
-           geom_density(alpha=.4) +
-           scale_fill_brewer(palette = "Set2")  +
-           scale_color_brewer(palette = "Set2") +
-           theme_light() +
-           scale_y_continuous(name = "Плотность распределения") +
-           scale_x_continuous(labels = function(x) format(x, scientific = FALSE), 
-                              name = "Зарплата, руб.",
-                              breaks = round(seq(min(jobs.paid$salary), 
-                                                 max(jobs.paid$salary), by = 30000),1)) +
-           theme(axis.text.x = element_text(size=9), axis.title = element_text(size=10))
+  geom_density(alpha=.4) +
+  scale_fill_brewer(palette = "Set2")  +
+  scale_color_brewer(palette = "Set2") +
+  theme_light() +
+  scale_y_continuous(name = "Плотность распределения") +
+  scale_x_continuous(labels = function(x) format(x, scientific = FALSE), 
+                     name = "Зарплата, руб.",
+                     breaks = round(seq(min(jobs.paid$salary), 
+                                        max(jobs.paid$salary), by = 30000),1)) +
+  theme(axis.text.x = element_text(size=9), axis.title = element_text(size=10))
 
 
 ## преставление заработной платы в зависимости от опыта (Москва)
@@ -216,6 +216,3 @@ library(quantmod)
 source("helpers.R")
 counties <- readRDS("data/counties.rds")
 percent_map(counties$white, "darkgreen", "% White")
-
-
-
