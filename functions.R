@@ -1,8 +1,7 @@
-
-
-################
+########################################################
 ## create function get data from hh
-################
+##########################################################
+
 hh.getresids <- function(query, paid = FALSE, area = 2)
 {
   # Makes a call to hh API and gets the list of resume ids based on the given search queries
@@ -11,10 +10,10 @@ hh.getresids <- function(query, paid = FALSE, area = 2)
   {
     searchURL <- paste0("https://hh.ru/search/resume?text="
                         , q
-                        , "&logic=normal&pos=position&exp_period=all_time&items_on_page=100&order_by=relevance&area="
-                        , area
+                        , "&logic=normal&pos=position&exp_period=all_time&items_on_page=100"
                         ,"&label=only_with_salary&clusters=true&relocation=living"
                         ,"&page=")
+    
     allids <- NULL
     for (pageNum in 0:30) {
       try(
@@ -52,6 +51,7 @@ hh.getresumes <- function(ids, name)
     , Salary = numeric() # зарплата
     , Published = character()
     , Level = character()
+    , experience = character()
     , stringsAsFactors = FALSE
   )
   
@@ -59,7 +59,7 @@ hh.getresumes <- function(ids, name)
   {
     try(
       {
-        data <- read_html(paste0("https://spb.hh.ru/resume/", id))
+        data <- read_html(paste0("https://hh.ru/resume/", id))
         
         tmp <- str_split(
           str_remove(pattern = "\u00A0",
@@ -89,6 +89,7 @@ hh.getresumes <- function(ids, name)
           Currency = currency,
           Salary = salary,
           Published = as.character(Sys.Date()),
+          experience = experience,
           Level = NA,
           stringsAsFactors = FALSE))
         

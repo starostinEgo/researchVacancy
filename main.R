@@ -7,11 +7,7 @@ library(plotly)
 library(XML)
 library(htmlTable)
 
-setwd("C:\\Users\\EStarostin\\Desktop\\research\\researchVacancy")
 source("functions.R")
-
-
-
 
 ################################
 ## step 1 get data from hh.ru
@@ -20,14 +16,15 @@ source("functions.R")
 ## функция идет на сайт hh и парсит данные по ключевым словам, что переданы в функции
 ## функция данные превращает в data.Frame
 
-jobdf <- hh.getjobs(query = c( "sales"),
-                    ##"data+scientist"),
+jobdf <- hh.getjobs(query =
+                    c("data+scientist"),
                     ##, "systems+analyst"
                     ##, "product+owner"), 
                     paid = FALSE)
 
 ## функция идет по каждой url что была получена ранее и 
 ## собирает индивидуально дополнительную информацию
+## валюта, зарплата от и до. опыт и gross net.
 
 jobdf <- hh.getSalaryExp(jobdf)
 
